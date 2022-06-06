@@ -1,51 +1,91 @@
-# -*- coding: utf-8 -*-
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import Dense, SimpleRNN
+import matplotlib.pyplot as plt
+import os
 
-#  tf.disable_v2_behavior()
+input_word = "abcde"
+w_to_id = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4}  # 单词映射到数值id的词典
+id_to_onehot = {0: [1., 0., 0., 0., 0.],
+                1: [0., 1., 0., 0., 0.],
+                2: [0., 0., 1., 0., 0.],
+                3: [0., 0., 0., 1., 0.],
+                4: [0., 0., 0., 0., 1.]}  # id编码为one-hot
 
-# create data
-x_data = np.random.rand(100).astype(np.float32)     # 一百个随机数列  定义数据类型
-y_data = x_data*0.1+0.3          # W为0.3
-# print(y_data)
-# create tensorflow structure start #
-# AttributeError: module 'tensorflow' has no attribute 'random_uniform'
-# V2版本里面random_uniform改为random.uniform
-Weights = tf.Variable(tf.random.uniform((1,), -1.0, 1.0))  # 随机数列生产的参数 [1] W结构为一维 -1.0, 1.0 随机生产数列的范围
-# TypeError: 'function' object is not subscriptable
-# 一般是少了括号
-print(Weights)
-biases = tf.Variable(tf.zeros((1,)))     # 定义初始值 0
-print(biases)
-# y = Weights*x_data+biases
-# 定义预测值y
+x_train = [id_to_onehot[w_to_id['a']], id_to_onehot[w_to_id['b']], id_to_onehot[w_to_id['c']],
+           id_to_onehot[w_to_id['d']], id_to_onehot[w_to_id['e']]]
+y_train = [w_to_id['b'], w_to_id['c'], w_to_id['d'], w_to_id['e'], w_to_id['a']]
 
-def loss():
-    w = Weights * x_data + biases
-    print(tf.keras.losses.MSE(y_data, w))
+np.random.seed(7)
+np.random.shuffle(x_train)
+np.random.seed(7)
+np.random.shuffle(y_train)
+tf.random.set_seed(7)
 
-    return tf.keras.losses.MSE(y_data, w)  # alias 计算loss  预测值与真实值的差别
-# AttributeError: module 'tensorflow_core._api.v2.train' has no attribute 'GradientDescentOptimizer'
-# "tf.train.GradientDescentOptimizer" change "tf.compat.v1.train.GradientDescentOptimizer"
-# `loss` passed to Optimizer.compute_gradients should be a function when eager execution is enabled.
-# 神经网络知道误差以后 优化器（optimizer）减少误差 提升参数的准确度
-# 其中的minimize可以拆为以下两个步骤：
-# ① 梯度计算
-# ② 将计算出来的梯度应用到变量的更新中
-# 拆开的好处是，可以对计算的梯度进行限制，防止梯度消失和爆炸
-# optimizer = tf.compat.v1.train.GradientDescentOptimizer(0.5)
-# train = optimizer.minimize(loss)
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.5)  # alias: tf.optimizers.SGD learning_rate=0.5
-#init = tf.initializer_all_variables()
-#  create tensorflow structure end #
+# 使x_train符合SimpleRNN输入要求：[送入样本数， 循环核时间展开步数， 每个时间步输入特征个数]。
+# 此处整个数据集送入，送入样本数为len(x_train)；输入1个字母出结果，循环核时间展开步数为1; 表示为独热码有5个输入特征，每个时间步输入特征个数为5
+x_train = np.reshape(x_train, (len(x_train), 1, 5))
+y_train = np.array(y_train)
 
-# create session
-# sess = tf.Session()
-# sess.run(init)          # Very important
+model = tf.keras.Sequential([
+    SimpleRNN(3),
+    Dense(5, activation='softmax')
+])
 
-for step in range(201):
-    optimizer.minimize(loss,var_list=[Weights,biases])
-    if step % 20 == 0:
-        print("{} step, Weights = {}, biases = {}"
-              .format(step, Weights.read_value(), biases.read_value()))  # read_value函数可用numpy替换
+model.compile(optimizer=tf.keras.optimizers.Adam(0.01),
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+              metrics=['sparse_categorical_accuracy'])
+
+checkpoint_save_path = "Cache/rnn_onehot_1pre1.ckpt"
+
+if os.path.exists(checkpoint_save_path + '.index'):
+    print('-------------load the model-----------------')
+    model.load_weights(checkpoint_save_path)
+
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_save_path,
+                                                 save_weights_only=True,
+                                                 save_best_only=True,
+                                                 monitor='loss')  # 由于fit没有给出测试集，不计算测试集准确率，根据loss，保存最优模型
+
+history = model.fit(x_train, y_train, batch_size=32, epochs=100, callbacks=[cp_callback])
+
+model.summary()
+
+# print(model.trainable_variables)
+file = open('./weights.txt', 'w')  # 参数提取
+for v in model.trainable_variables:
+    file.write(str(v.name) + '\n')
+    file.write(str(v.shape) + '\n')
+    file.write(str(v.numpy()) + '\n')
+file.close()
+
+###############################################    show   ###############################################
+
+# 显示训练集和验证集的acc和loss曲线
+acc = history.history['sparse_categorical_accuracy']
+loss = history.history['loss']
+
+plt.subplot(1, 2, 1)
+plt.plot(acc, label='Training Accuracy')
+plt.title('Training Accuracy')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(loss, label='Training Loss')
+plt.title('Training Loss')
+plt.legend()
+plt.show()
+
+############### predict #############
+
+preNum = int(input("input the number of test alphabet:"))
+for i in range(preNum):
+    alphabet1 = input("input test alphabet:")
+    alphabet = [id_to_onehot[w_to_id[alphabet1]]]
+    # 使alphabet符合SimpleRNN输入要求：[送入样本数， 循环核时间展开步数， 每个时间步输入特征个数]。此处验证效果送入了1个样本，送入样本数为1；输入1个字母出结果，所以循环核时间展开步数为1; 表示为独热码有5个输入特征，每个时间步输入特征个数为5
+    alphabet = np.reshape(alphabet, (1, 1, 5))
+    result = model.predict([alphabet])
+    pred = tf.argmax(result, axis=1)
+    pred = int(pred)
+    tf.print(alphabet1 + '->' + input_word[pred])
 
