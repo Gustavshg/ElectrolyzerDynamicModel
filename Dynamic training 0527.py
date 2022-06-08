@@ -19,7 +19,7 @@ save = 1
 model_lstm = Dynamic_model_0527.V_3LSTM()
 model_lstm.compile(loss='mean_squared_error', optimizer='Adam')
 optimizer = keras.optimizers.Adam(learning_rate=1E-3)
-
+t00 = time.time()
 train = 1
 if train == 1:
     for epoch_id in range(num_epochs):
@@ -34,12 +34,13 @@ if train == 1:
             grads = tape.gradient(loss, model_lstm.variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, model_lstm.variables))
             loss_epoch += loss
-            print('batch %d/%d, loss = %f' % (batch_id, num_batches, loss))
+            print('batch %d/%'
+                  'd, loss = %f' % (batch_id, num_batches, loss))
         print('-------------------------------------------------------------')
         print('epoch %d, loss = %f, time = %f' % (epoch_id, loss_epoch, time.time() - t0))
 
-        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.5.ckpt'
+        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.6.ckpt'
         if save == 1:
             model_lstm.save(storage_file)
-
+print('total time consumption %f' % (time.time(-t00)))
 

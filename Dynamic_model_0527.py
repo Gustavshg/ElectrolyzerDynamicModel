@@ -16,7 +16,7 @@ class V_LSTM(tf.keras.models.Model):
         return y
 
 class V_2LSTM(tf.keras.models.Model):
-    def __init__(self , units = 20):
+    def __init__(self , units = 68):
         super(V_2LSTM,self).__init__()
         self.lstm1 = tf.keras.layers.GRU(units,return_sequences = True)
         self.lstm2 = tf.keras.layers.GRU(units)
@@ -32,7 +32,7 @@ class V_2LSTM(tf.keras.models.Model):
         return y
 
 class V_3LSTM(tf.keras.models.Model):
-    def __init__(self , units = 20):
+    def __init__(self , units = 68):
         super(V_3LSTM,self).__init__()
         self.lstm1 = tf.keras.layers.GRU(units,return_sequences = True)
         self.lstm2 = tf.keras.layers.GRU(units,return_sequences = True)

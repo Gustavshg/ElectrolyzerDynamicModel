@@ -29,7 +29,6 @@ batch_size = args.batch_size
 num_epochs = args.num_epochs
 
 model_2lstm = Dynamic_model_0527.V_2LSTM()
-model_2lstm.compile(loss = 'mean_squared_error', optimizer = 'Adam')
 optimizer = keras.optimizers.Adam(learning_rate = args.learning_rate)
 
 read = 0
@@ -37,7 +36,7 @@ if read == 1:
     model_2lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version2lstm 1.3.ckpt')
 
 
-
+t00 = time.time()
 train = 1
 if train == 1:
     data = Dynamic_data_feed_0527.V_dynamic_data(batch_size = batch_size, source_folder= 'Dynamic model data-20s/Data 0525-dupli')
@@ -57,8 +56,8 @@ if train == 1:
         print('-------------------------------------------------------------')
         print('epoch %d, loss = %f, time = %f' % (epoch_id, loss_epoch,time.time()-t0))
 
-        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version2lstm 1.4.ckpt'
+        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version2lstm 1.5.ckpt'
         if save == 1:
             model_2lstm.save(storage_file)
-
+print('total time consumption %f' % (time.time(-t00)))
 

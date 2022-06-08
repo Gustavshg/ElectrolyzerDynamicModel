@@ -25,7 +25,7 @@ save = 1
 
 # model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version 1.2.ckpt')
 # model_lstm.summary()
-model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version2lstm 1.3.ckpt')
+model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.5.ckpt')
 model_lstm.summary()
 df = pandas.read_csv('Dynamic model data-20s/Data 0525-dupli/TJ-20211007.csv')
 T_out = df['Tout']
@@ -35,8 +35,9 @@ Lye_flow = df['LyeFlow']
 V_static = df['V_static']
 V_dynamic = df['V_dynamic']
 
-plt.figure()
-plt.plot(T_in)
+print(df.columns)
+# plt.figure()
+# plt.plot(T_in)
 
 
 V_pred = []
@@ -47,6 +48,8 @@ if pred == 1:
         if j < args.num_step+1:
             V_pred.append(0.)
         else:
+            """感觉根据0607晚上的想法，这里其实每一个batch就是一个预测点，每个batch都选取最后的结果，我们这里为了省事儿，其实是吧训练函数拿来做预测函数用了，严谨的方式还是应该再写一个预测函数，这个需要后面做一下"""
+            """我们之前在写极化曲线的时候其实没有用到batch，所以这次需要学习一下"""
             if len(x)<=50:
                 cur_T_out = T_in[j - args.num_step - 1:j - 1]  # 出口温度因为是需要预测的，所以需要上一时刻出口温度，因为当前采样时刻的出口温度不知道
                 cur_Current_density = Current_density[j - args.num_step:j]
@@ -71,7 +74,7 @@ if pred == 1:
     plt.plot(V_pred)
     plt.plot(V_dynamic)
     plt.legend(['Dynamic model', 'original voltage'])
-    plt.title('2 layer of gru')
+    plt.title('3 layer of gru')
 
 
 plt.show()
