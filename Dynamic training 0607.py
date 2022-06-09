@@ -59,5 +59,5 @@ if train == 1:
         storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version2lstm 1.5.ckpt'
         if save == 1:
             model_2lstm.save(storage_file)
-print('total time consumption %f' % (time.time(-t00)))
+print('total time consumption %f' % (time.time()-t00))
 

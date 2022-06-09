@@ -25,9 +25,9 @@ save = 1
 
 # model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version 1.2.ckpt')
 # model_lstm.summary()
-model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.5.ckpt')
+model_lstm = keras.models.load_model( 'Neural Networks/Dynamic model/Verison1/0607-version2lstm 1.5.ckpt')
 model_lstm.summary()
-df = pandas.read_csv('Dynamic model data-20s/Data 0525-dupli/TJ-20211007.csv')
+df = pandas.read_csv('Dynamic model data-20s/Data 0525-dupli/TJ-20211129.csv')
 T_out = df['Tout']
 Current_density = df['Current density']
 T_in = df['Tlye']
@@ -42,7 +42,7 @@ print(df.columns)
 
 V_pred = []
 x = np.zeros([1,args.num_step,5])
-pred = 0
+pred =1
 if pred == 1:
     for j in range(len(df)):
         if j < args.num_step+1:
@@ -71,9 +71,13 @@ if pred == 1:
                     V_pred.append(float(scaler))
                 x = np.zeros([1, args.num_step, 5])
     plt.figure()
-    plt.plot(V_pred)
-    plt.plot(V_dynamic)
-    plt.legend(['Dynamic model', 'original voltage'])
+    ax1 = plt.gca()
+    ax1.plot(V_pred)
+    ax1.plot(V_dynamic)
+    ax1.legend(['Dynamic model', 'original voltage'])
+    ax2 = ax1.twinx()
+    ax2.plot(Current_density,'r')
+    ax2.legend(['current density'])
     plt.title('3 layer of gru')
 
 

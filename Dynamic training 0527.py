@@ -19,6 +19,11 @@ save = 1
 model_lstm = Dynamic_model_0527.V_3LSTM()
 model_lstm.compile(loss='mean_squared_error', optimizer='Adam')
 optimizer = keras.optimizers.Adam(learning_rate=1E-3)
+
+read = 1
+if read == 1:
+    model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.7.ckpt')
+
 t00 = time.time()
 train = 1
 if train == 1:
@@ -39,8 +44,8 @@ if train == 1:
         print('-------------------------------------------------------------')
         print('epoch %d, loss = %f, time = %f' % (epoch_id, loss_epoch, time.time() - t0))
 
-        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.6.ckpt'
+        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.7.ckpt'
         if save == 1:
             model_lstm.save(storage_file)
-print('total time consumption %f' % (time.time(-t00)))
+print('total time consumption %f' % (time.time()-t00))
 
