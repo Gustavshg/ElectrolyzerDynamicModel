@@ -6,9 +6,9 @@ import Dynamic_data_feed_0527
 import numpy as np
 import tensorflow as tf
 import keras
-
+from keras import losses
 batch_size = 50
-num_epochs = 50
+num_epochs = 20
 
 data = Dynamic_data_feed_0527.V_dynamic_data(batch_size)
 
@@ -22,7 +22,7 @@ optimizer = keras.optimizers.Adam(learning_rate=1E-3)
 
 read = 1
 if read == 1:
-    model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.7.ckpt')
+    model_lstm = keras.models.load_model('Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.8.ckpt')
 
 t00 = time.time()
 train = 1
@@ -35,16 +35,16 @@ if train == 1:
             x, y = data.get_batch()
             with tf.GradientTape() as tape:
                 v_dynamic_pred = model_lstm(x)
-                loss = tf.reduce_sum(tf.square(v_dynamic_pred - y))
+                # loss = tf.reduce_sum(tf.square(v_dynamic_pred - y))
+                loss = tf.reduce_sum(losses.mean_squared_logarithmic_error(y,v_dynamic_pred))
             grads = tape.gradient(loss, model_lstm.variables)
             optimizer.apply_gradients(grads_and_vars=zip(grads, model_lstm.variables))
             loss_epoch += loss
-            print('batch %d/%'
-                  'd, loss = %f' % (batch_id, num_batches, loss))
+            print('batch %d/%d, loss = %f' % (batch_id, num_batches, loss))
         print('-------------------------------------------------------------')
         print('epoch %d, loss = %f, time = %f' % (epoch_id, loss_epoch, time.time() - t0))
 
-        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.7.ckpt'
+        storage_file = 'Neural Networks/Dynamic model/Verison1/0607-version3lstm 1.9.ckpt'
         if save == 1:
             model_lstm.save(storage_file)
 print('total time consumption %f' % (time.time()-t00))
