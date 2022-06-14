@@ -50,7 +50,7 @@ dates = os.listdir(source_folder)
 dates.sort()
 
 """这部分主要是检查我们需要的列中是否存在-9999这样的异常值，应该只有1202里面有这样的异常值"""
-columns_exam = 1
+columns_exam = 0
 if columns_exam == 1:
     # exam_columns = ['电解电压', '电解电流', '碱液流量', '碱温', '系统压力  ', '氧槽温', '氢槽温', '氧中氢', '氢中氧']
     exam_columns = [ '氧槽温', '氢槽温']
