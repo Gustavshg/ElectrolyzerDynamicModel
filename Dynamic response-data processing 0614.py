@@ -83,6 +83,7 @@ add_columns = 0
 if add_columns == 1:
     for date in dates:
         df = pandas.read_csv(os.path.join(source_folder, date))
+        print('date:{0}, length:{1}'.format(date[7:11], len(df)))#显示日期和长度
         """模型输入"""
         col = 'V'  # 小室电压
         if not col in df:
@@ -114,19 +115,23 @@ if add_columns == 1:
         col = 'LyeFlow_Polar'  # 碱液流量（极化曲线使用）
         if not col in df:
             cur = df['碱液流量']
+            import warnings
+            warnings.filterwarnings('ignore')#隐藏掉乱糟糟的警告
             for i in range(len(cur)):
                 if cur[i] <= 0.204425:
                     cur[i] = 0.204425
             df[col] = cur
+        """模型特殊输入"""
         col = 'dI'  # 当前时刻的电流与上一时刻电流的差异，所以第一个是0
         if not col in df:
             dI = [0]
             cur = df['电解电流']
             for i in range(1, len(cur)):
-                dI.append(cur[i] - cur[i - 1])
+                dI.append(cur[i] - cur[i - 1])#这一时刻电流和上一时刻之间的差距
             df[col] = dI
         col = 'dj'  # 当前时刻的电流与上一时刻  电流密度  的差异，所以第一个是0
         if not col in df:
+
             df[col] = df['dI'] / 0.425
 
         """模型标的"""
@@ -152,7 +157,7 @@ if add_columns == 1:
         col = 'OTH'  # 氢中氧，oxygen to hydrogen
         if not col in df:
             df[col] = df['氢中氧']
-        print(date, df.columns)
+        # print(date, df.columns)
         df.to_csv(os.path.join(source_folder, date))
 
     # plt.style.use('seaborn')
@@ -171,34 +176,57 @@ OriginalColumns = ['时间', '电解电压', '电解电流', '产氢量', '产�
                    '脱氧上温', '脱氧下温', 'B塔上温', 'B塔下温', 'C塔上温', 'C塔下温', 'A塔上温', 'A塔下温', '露点',
                    '微氧量', '出罐压力', '进罐温度', '进罐压力', 'V', 'I', 'Current density', 'Pressure',
                    'Tlye', 'TH2', 'TO2', 'Tout', 'LyeFlow', 'LyeFlow_Polar', 'dI', 'dj',
-                   'dV', 'dTout', 'HTO', 'OTH'],
+                   'dV', 'dTout', 'HTO', 'OTH']
 t0 = time.time()
 add_polar = 0
 if add_polar == 1:
+    import warnings
+
+    warnings.filterwarnings('ignore')  # 隐藏掉乱糟糟的警告
     import Polar_fitting_collection as polar
+    import matplotlib.pyplot as plt
+
+    plt.style.use('seaborn')
     """这里需要把电流密度、入口温度、碱液流量进行错位，用下一时刻的这三个数值，再加上当前时刻的出口温度，得到当前时刻预测下一时刻的极化电压"""
     nn_polar = polar.polar_nn()
     for date in dates:
-        print(date)
         df = pandas.read_csv(os.path.join(source_folder, date))
+        print('date:{0}, length:{1}'.format(date[7:11],len(df)))
         T_out = df['Tout']
         current_density = df['Current density']
         T_in = df['Tlye']
-        LyeFlow = df['LyeFlow_Polar']
-        V_nn = nn_polar.polar(T_out, T_in, current_density, LyeFlow)
+        LyeFlow = df['LyeFlow_Polar']#这里需要调用极化曲线的碱液流量
+
         V_lh = polar.polar_lihao(T_out,current_density)
         V_wtt = polar.polar_wtt(T_out,current_density)
         V_shg = polar.polar_shg(T_out,T_in,current_density,LyeFlow)
-        df['polar_nn'] = V_nn
+        V_nn = nn_polar.polar(T_out, T_in, current_density, LyeFlow)
+
         df['polar_lh'] = V_lh
         df['polar_wtt'] = V_wtt
         df['polar_shg'] = V_shg
+        df['polar_nn'] = V_nn
         df.to_csv(os.path.join(source_folder, date))
+
+        # plt.figure(figsize=(15, 8))
+        # plt.title(date)
+        # plt.subplots_adjust(left=0.073, bottom=0.062, right=0.95, top=0.925)
+        # plt.plot(V_lh)
+        # plt.plot(V_wtt)
+        # plt.plot(V_shg)
+        # plt.plot(V_nn)
+        # plt.plot(df['V'],'r')
+        # plt.legend(['lh','wtt','shg','nn'])
+        # plt.ylim([1.5,2.3])
+        # plt.show()
 
     print(time.time()- t0)
 
 add_static_and_dynamic_voltage = 0
 if add_static_and_dynamic_voltage == 1:
+    import warnings
+
+    warnings.filterwarnings('ignore')  # 隐藏掉乱糟糟的警告
     import Polar_fitting_collection as polar
     """这里根据我们电化学动态响应的思路进行改造，即使用上一时刻温度与当前时刻电流密度、碱液流量、入口温度等计算当前时刻静态电压，并且和动态电压做差值，得到模型预测的标的"""
     nn_polar = polar.polar_nn()
