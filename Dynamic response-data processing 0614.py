@@ -10,9 +10,6 @@ from matplotlib.font_manager import FontProperties
 # 設置我們需要用到的中文字體（字體文件地址）
 my_font = FontProperties(fname=r"c:\windows\fonts\SimHei.ttf", size=12)
 
-
-
-
 OriginalColumns = ['时间', '电解电压', '电解电流', '产氢量', '产氢累计量',
                    '碱液流量', '碱温', '系统压力  ', '氧槽温', '氢槽温', '氧侧液位', '氢侧液位', '氧中氢', '氢中氧',
                    '脱氧上温', '脱氧下温', 'B塔上温', 'B塔下温', 'C塔上温', 'C塔下温', 'A塔上温', 'A塔下温', '露点',
@@ -28,22 +25,21 @@ if this_time == 1:
                        'B塔上温', 'B塔下温', 'C塔上温', 'C塔下温', 'A塔上温', 'A塔下温', '露点', '微氧量', '出罐压力',
                        '进罐温度', '进罐压力']
     for folder in files:
-        subfolder = os.path.join(sourcefolder,folder)
+        subfolder = os.path.join(sourcefolder, folder)
         print(subfolder)
         subfiles = os.listdir(subfolder)
         subfiles.sort()
         df = pandas.DataFrame()
         for file20s in subfiles:
-            cur_path = os.path.join(subfolder,file20s)
+            cur_path = os.path.join(subfolder, file20s)
             if os.path.isfile(cur_path):
                 cur = pandas.read_excel(cur_path)
-                df = pandas.concat([df,cur],axis=0)
-        storage_file_name = 'Dynamic model data-20s/Data 0614/'+ folder+'.csv'
+                df = pandas.concat([df, cur], axis=0)
+        storage_file_name = 'Dynamic model data-20s/Data 0614/' + folder + '.csv'
         'Data-original/TJ-20211129/TJ-20211129-083000-193000-20s.xls'
         df.to_csv(storage_file_name)
         print(storage_file_name)
         print(len(df))
-
 
 source_folder = 'Dynamic model data-20s/Data 0614'
 dates = os.listdir(source_folder)
@@ -53,7 +49,7 @@ dates.sort()
 columns_exam = 0
 if columns_exam == 1:
     # exam_columns = ['电解电压', '电解电流', '碱液流量', '碱温', '系统压力  ', '氧槽温', '氢槽温', '氧中氢', '氢中氧']
-    exam_columns = [ '氧槽温', '氢槽温']
+    exam_columns = ['氧槽温', '氢槽温']
     for date in dates:
         flag = 1  # 如果没有数据异常，就为1，如果有数据异常，就置为0
         anomaly = []
@@ -67,14 +63,14 @@ if columns_exam == 1:
         if flag == 1:
             print(date + ' all clear')
         else:
-            slices = [1465,1541]#1130的数据里面有两个点全部数据为零，这里需要对其进行一个差值
+            slices = [1465, 1541]  # 1130的数据里面有两个点全部数据为零，这里需要对其进行一个差值
             for slice in slices:
                 for col in OriginalColumns[1:]:
                     # print(col)
                     # print(cur[slice])
-                    df[col][slice] = (df[col][slice-1] + df[col][slice+1])/2
+                    df[col][slice] = (df[col][slice - 1] + df[col][slice + 1]) / 2
                 # print(col)
-                print(df[ '氧槽温'][slice])
+                print(df['氧槽温'][slice])
             df.to_csv(os.path.join(source_folder, date))
             print(date + str(anomaly) + 'has anomaly')
 
@@ -83,7 +79,7 @@ add_columns = 0
 if add_columns == 1:
     for date in dates:
         df = pandas.read_csv(os.path.join(source_folder, date))
-        print('date:{0}, length:{1}'.format(date[7:11], len(df)))#显示日期和长度
+        print('date:{0}, length:{1}'.format(date[7:11], len(df)))  # 显示日期和长度
         """模型输入"""
         col = 'V'  # 小室电压
         if not col in df:
@@ -116,7 +112,8 @@ if add_columns == 1:
         if not col in df:
             cur = df['碱液流量']
             import warnings
-            warnings.filterwarnings('ignore')#隐藏掉乱糟糟的警告
+
+            warnings.filterwarnings('ignore')  # 隐藏掉乱糟糟的警告
             for i in range(len(cur)):
                 if cur[i] <= 0.204425:
                     cur[i] = 0.204425
@@ -127,11 +124,10 @@ if add_columns == 1:
             dI = [0]
             cur = df['电解电流']
             for i in range(1, len(cur)):
-                dI.append(cur[i] - cur[i - 1])#这一时刻电流和上一时刻之间的差距
+                dI.append(cur[i] - cur[i - 1])  # 这一时刻电流和上一时刻之间的差距
             df[col] = dI
         col = 'dj'  # 当前时刻的电流与上一时刻  电流密度  的差异，所以第一个是0
         if not col in df:
-
             df[col] = df['dI'] / 0.425
 
         """模型标的"""
@@ -191,15 +187,15 @@ if add_polar == 1:
     nn_polar = polar.polar_nn()
     for date in dates:
         df = pandas.read_csv(os.path.join(source_folder, date))
-        print('date:{0}, length:{1}'.format(date[7:11],len(df)))
+        print('date:{0}, length:{1}'.format(date[7:11], len(df)))
         T_out = df['Tout']
         current_density = df['Current density']
         T_in = df['Tlye']
-        LyeFlow = df['LyeFlow_Polar']#这里需要调用极化曲线的碱液流量
+        LyeFlow = df['LyeFlow_Polar']  # 这里需要调用极化曲线的碱液流量
 
-        V_lh = polar.polar_lihao(T_out,current_density)
-        V_wtt = polar.polar_wtt(T_out,current_density)
-        V_shg = polar.polar_shg(T_out,T_in,current_density,LyeFlow)
+        V_lh = polar.polar_lihao(T_out, current_density)
+        V_wtt = polar.polar_wtt(T_out, current_density)
+        V_shg = polar.polar_shg(T_out, T_in, current_density, LyeFlow)
         V_nn = nn_polar.polar(T_out, T_in, current_density, LyeFlow)
 
         df['polar_lh'] = V_lh
@@ -220,50 +216,68 @@ if add_polar == 1:
         # plt.ylim([1.5,2.3])
         # plt.show()
 
-    print(time.time()- t0)
+    print(time.time() - t0)
 
 add_static_and_dynamic_voltage = 0
 if add_static_and_dynamic_voltage == 1:
     import warnings
-
+    import Smoothen as sm
     warnings.filterwarnings('ignore')  # 隐藏掉乱糟糟的警告
     import Polar_fitting_collection as polar
+
     """这里根据我们电化学动态响应的思路进行改造，即使用上一时刻温度与当前时刻电流密度、碱液流量、入口温度等计算当前时刻静态电压，并且和动态电压做差值，得到模型预测的标的"""
     nn_polar = polar.polar_nn()
     for date in dates:
         print(date)
         df = pandas.read_csv(os.path.join(source_folder, date))
-        print(df.columns)
         T_out = df['Tout']
+        V = df['V']
+        V = np.array(V)
+        V_star = np.insert(V,0,V[0])
+        V_star = V_star[:-1]
 
-        T_out = list(T_out[1:])
-        T_out.append(T_out[-1])
         T_out = np.array(T_out)
+        T_out_star = np.insert(T_out,0,T_out[0])  # 在这里我们将所有的输入温度后移一位，用来计算修正静态电压
+        T_out_star = T_out_star[:-1]
         current_density = df['Current density']
         T_in = df['Tlye']
         LyeFlow = df['LyeFlow_Polar']
-        V_static = nn_polar.polar(T_out, T_in, current_density, LyeFlow)
+        V_static_star = nn_polar.polar(T_out_star, T_in, current_density, LyeFlow)  # 根据上一采样时刻的出口温度，其他都是这一个采样时刻的
 
-        df['V_static'] = V_static#静态电压即为预测下一状态的极化电压
-        df['V_dynamic'] = df['V']-V_static#动态电压就是下一秒真实值和静态电压的差值
+        df['T_out_star'] = T_out_star
+        df['V_star'] = V_star
+        df['V_static_star'] = V_static_star  # 这个是使用上一时刻温度的计划电压
+        dV = df['dV']  # 这里是当前时刻和上一时刻的电压差，也可以是我们回归训练的目标
+        dV_smooth = sm.AA(dV)
+
+        V_static_star = sm.AA(V_static_star)
+        dV_static_star = sm.diff(V_static_star)
+
+        dV_dynamic_star = dV_smooth - dV_static_star
+
+        df['dV_static_star'] = dV_static_star
+        df['dV_dynamic_star'] = dV_dynamic_star
+
+        # plt.figure(figsize=(15, 8))
+        # plt.subplots_adjust(left=0.073, bottom=0.062, right=0.95, top=0.925)
+        # ax1 = plt.gca()
+        # ax1.plot(df['dV'],'blue')
+        # ax1.plot(dV_smooth, 'black')
+        # ax1.plot(df['dV_static_star'], 'green')
+        # ax1.plot(df['dV_dynamic_star'],'red')
+        # ax1.legend(['dV','dV smooth','dV_static_star','dV_dynamic_star'],loc = 1)
+        # ax2 = ax1.twinx()
+        # ax2.plot(df['V'])
+        # ax2.plot(df['V_static_star'])
+        # ax2.legend(['V','V_static_star'], loc = 2)
+        # plt.show()
+        # break
         df.to_csv(os.path.join(source_folder, date))
 
-        # ax1 = plt.gca()
-        # ax1.plot(df['V_static'],'green')
-        # ax1.plot(df['V'],'red')
-        # ax1.legend(['static voltage','original voltage'],loc = 1)
-        # ax2 = ax1.twinx()
-        # ax2.plot(df['V_dynamic'])
-        # ax2.legend(['dynamic voltage'], loc = 2)
-        # plt.show()
+    print(time.time() - t0)
 
-    print(time.time()- t0)
-
-
-
-
-smooth= 0
-if smooth == 1:
+smooth_temp = 0
+if smooth_temp == 1:
     import Smoothen as sm
 
     for date in dates:
@@ -281,7 +295,14 @@ if smooth == 1:
             dT_WL = sm.diff(Tout_WL)
             df['dTout_WL'] = dT_WL
             df.to_csv(os.path.join(source_folder, date))
-
+        print(df.columns)
+    """'时间','电解电压', '电解电流', '产氢量', '产氢累计量', '碱液流量', '碱温', '系统压力  ', '氧槽温', '氢槽温',
+       '氧侧液位', '氢侧液位', '氧中氢', '氢中氧', '脱氧上温', '脱氧下温', 'B塔上温', 'B塔下温', 'C塔上温',
+       'C塔下温', 'A塔上温', 'A塔下温', '露点', '微氧量', '出罐压力', '进罐温度', '进罐压力', 'V', 'I',
+       'Current density', 'Pressure', 'Tlye', 'TH2', 'TO2', 'Tout', 'LyeFlow',
+       'LyeFlow_Polar', 'dI', 'dj', 'dV', 'dTout', 'HTO', 'OTH', 'polar_lh',
+       'polar_wtt', 'polar_shg', 'polar_nn', 'T_out_star', 'V_static_star',
+       'dV_static_star', 'dV_dynamic_star', 'dTout_WL'"""
     # step = 0.3
     # plt.style.use('seaborn')
     # plt.figure(figsize=(15, 8))
