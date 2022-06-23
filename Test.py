@@ -1,4 +1,3 @@
-import numpy as np
-a = np.array([1,2,3,4,5])
-print(a)
-print(np.append(a,999))
+from keras.layers import Lambda
+square = Lambda(lambda x,y:x-y)
+print(square(1,2))

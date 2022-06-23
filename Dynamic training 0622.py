@@ -82,7 +82,7 @@ if args.recover ==1:
     from pydotplus import graphviz
     from tensorflow.keras.utils import plot_model
     model = keras.models.load_model('Neural Networks/Dynamic model/Verson0621/trial 4 lstm 1.7.ckpt')
-    plot_model(model)
+    plot_model(model,to_file = 'Cache/model1.png',show_shapes = True,show_layer_names = True,dpi = 300,show_layer_activations = True)
     dynamic_data = datafeed.dynamic_data()
 
     X, v, t = dynamic_data.get_redemo_data()

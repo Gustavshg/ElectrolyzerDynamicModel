@@ -314,3 +314,56 @@ if smooth_temp == 1:
     # plt.plot(dT_WL + step*3, label='WL transform')
     # plt.legend()
     # plt.show()
+
+def ToDateTime(df):#可以把中文日期，转化为可读的日期格式
+    new_df = pandas.DataFrame()
+    for date in df['时间']:
+        tt = pandas.to_datetime(date.replace('年','-').replace('月','-').replace('日',' ').replace('时',':').replace('分',':').replace('秒',''))
+        tt = tt.strftime('%H%M%S')
+        tt = pandas.Series(tt)
+        # new_df = new_df.append([tt])
+        new_df = pandas.concat([new_df,tt])
+    new_df.index = range(len(df))
+    df['Time'] = new_df
+    return df
+
+
+def CalTime(df,temp_tuple):#这里计算每一个时间到当时凌晨两点的秒数，然后可以进行下一步环境温度的计算
+    import math
+    BoT, EoT, TMAX = temp_tuple
+    AMBT = pandas.DataFrame()
+    for tick in df['Time']:
+        dt = int(tick[:2]) * 3600 + int(tick[2:4]) * 60 + int(tick[4:]) - 2 * 3600# seconds from this day 02:00:00
+        ambT = BoT + (EoT-BoT)*dt/86400 + (TMAX - (EoT+BoT)/2)/2 *( math.sin(dt/86400*2*math.pi - math.pi/2)+1)
+
+        # AMBT = AMBT.append(pandas.DataFrame(np.array([ambT])))
+        AMBT = pandas.concat([AMBT,pandas.Series(ambT)])
+    AMBT.index = range(len(AMBT))
+    df['AmbT'] = AMBT
+    return df
+
+amb_temp = 1
+if amb_temp == 1:
+    temp_dic = {}  # BoT, EoT, TMAX
+    temp_dic['TJ-20210924.csv'] = (27, 27, 37)
+    temp_dic['TJ-20211001.csv'] = (27,26,34)
+    temp_dic['TJ-20211007.csv'] = (26,22,35)
+    temp_dic['TJ-20211014.csv'] = (21, 22,24)
+    temp_dic['TJ-20211029.csv'] = (18, 17, 22)
+    temp_dic['TJ-20211111.csv'] = (22, 22, 5)
+    temp_dic['TJ-20211123.csv'] = (7,6.5,13)
+    temp_dic['TJ-20211125.csv'] = (0, 10.5, 17)
+    temp_dic['TJ-20211126.csv'] = (-7, -2, 9.5)
+    temp_dic['TJ-20211129.csv'] = (-3, -3, 23)
+    temp_dic['TJ-20211130.csv'] = (3, 1, 12)
+    temp_dic['TJ-20211202.csv'] = (-2,-3, 23)
+
+    for date in dates:
+        print(date)
+        df = pandas.read_csv(os.path.join(source_folder, date))
+        col = 'AmbT'  # 氢中氧，oxygen to hydrogen
+        if not col in df:
+            df = CalTime(ToDateTime(df),temp_dic[date])
+            df.to_csv(os.path.join(source_folder, date))
+
+

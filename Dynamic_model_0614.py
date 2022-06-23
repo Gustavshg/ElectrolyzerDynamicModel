@@ -55,3 +55,4 @@ class V_4LSTM(tf.keras.models.Model):
         x = self.dense1(x)
         y = self.dense(x)
         return y
+
