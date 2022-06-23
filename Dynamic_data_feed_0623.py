@@ -37,16 +37,17 @@ class dynamic_data():
     def get_input_cols(self,df):
         V_star = to_np_and_expand(df['V_star'])/2.5  # 上一个采样时刻的电压
         T_out_star = to_np_and_expand(df['T_out_star'])/100# 上一个采样时刻的温度
+        dV_static_star = to_np_and_expand(df['dV_static_star'])
         Current_density = to_np_and_expand(df['Current density'])/4000
         T_in = to_np_and_expand(df['Tlye'])/100
         Lye_flow = to_np_and_expand(df['LyeFlow'])/2
-        dV_static_star = to_np_and_expand(df['dV_static_star'])
-        inputs = np.concatenate((V_star, T_out_star, dV_static_star, Current_density, T_in, Lye_flow), axis=1)
+        Amb_temp = to_np_and_expand(df['AmbT'])
 
-        dV_dynamic_star = to_np_and_expand(df['dV_dynamic_star'])
-        dT_out_WL = to_np_and_expand(df['dTout_WL'])
+        inputs = np.concatenate((V_star, T_out_star, dV_static_star, Current_density, T_in, Lye_flow,Amb_temp), axis=1)
+        V = to_np_and_expand(df['V'])
+        T_out =to_np_and_expand(df['Tout'])
 
-        return inputs,dV_dynamic_star,dT_out_WL
+        return inputs,V,T_out
 
     def get_batch(self,num_step = 60):
         """暂时这个还没法使用"""
@@ -58,14 +59,14 @@ class dynamic_data():
             file = self.file_list[file]
             file = os.path.join(self.source_folder, file)
             df = pandas.read_csv(file)
-            inputs, dV_dynamic_star, dT_out_WL = self.get_input_cols(df)
+            inputs,V,T_out = self.get_input_cols(df)
 
             random_locs = np.random.randint(low=0, high=len(df) - num_step,
                                             size=self.batch_size // self.file_num)  # 这里最后到length-num_step为止
             for idk in random_locs:
                 X.append(inputs[idk:idk + num_step, :])
-                Y_V.append(dV_dynamic_star[idk + num_step - 1])
-                Y_T.append(dT_out_WL[idk + num_step - 1])
+                Y_V.append(V[idk + num_step - 1])
+                Y_T.append(T_out[idk + num_step - 1])
         X = np.array(X)
         Y_V = np.array(Y_V)
         Y_T = np.array(Y_T)
@@ -77,7 +78,7 @@ class dynamic_data():
     def get_easy_batch(self,batch_size = 50,num_step = 60):
         """这里暂时是只提取固定日期的数据"""
         df = pandas.read_csv('Dynamic model data-20s/Data 0614/TJ-20211129.csv')
-        inputs, dV_dynamic_star, dT_out_WL = self.get_input_cols(df)
+        inputs, V,T_out = self.get_input_cols(df)
 
         random_locs = np.random.randint(low=0, high=len(df)-num_step, size=self.batch_size // self.file_num)  # 这里最后到length-num_step为止
         X = []
@@ -85,8 +86,8 @@ class dynamic_data():
         Y_T = []
         for idk in random_locs:
             X.append(inputs[idk:idk+num_step,:])
-            Y_V.append(dV_dynamic_star[idk + num_step-1])
-            Y_T.append(dT_out_WL[idk+num_step-1])
+            Y_V.append(V[idk + num_step-1])
+            Y_T.append(T_out[idk+num_step-1])
         X = np.array(X)
         Y_V = np.array(Y_V)
         Y_T = np.array(Y_T)
@@ -98,15 +99,15 @@ class dynamic_data():
         file = 'Dynamic model data-20s/Data 0614/TJ-2021' + date + '.csv'
         df = pandas.read_csv(file)
 
-        inputs, dV_dynamic_star, dT_out_WL = self.get_input_cols(df)
+        inputs, V,T_out = self.get_input_cols(df)
         """在给出对比结果的时候，可以忽略前六十个点，只给num_step之后的结果，输入输出都是这样"""
         X = []
         Y_V = []
         Y_T = []
         for idk in range(0,len(df) - num_step):
             X.append(inputs[idk:idk + num_step, :])
-            Y_V.append(dV_dynamic_star[idk + num_step - 1])
-            Y_T.append(dT_out_WL[idk + num_step - 1])
+            Y_V.append(V[idk + num_step - 1])
+            Y_T.append(T_out[idk + num_step - 1])
         return X,Y_V,Y_T
 
     def print_ori_v_t(self,num_step = 60,date = '1129'):

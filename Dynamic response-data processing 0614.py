@@ -342,7 +342,7 @@ def CalTime(df,temp_tuple):#这里计算每一个时间到当时凌晨两点的�
     df['AmbT'] = AMBT
     return df
 
-amb_temp = 1
+amb_temp = 0
 if amb_temp == 1:
     temp_dic = {}  # BoT, EoT, TMAX
     temp_dic['TJ-20210924.csv'] = (27, 27, 37)
