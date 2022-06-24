@@ -24,7 +24,7 @@ class dynamic_data():
             self.total_length += len(df)
 
         self.file_num = 5
-        self.batch_file_list = np.random.randint(low=0, high=len(self.file_list), size=self.file_num)  # 随机抽取5个文件，每个文件里抽取10个sequence
+
         self.ALL_columns = ['时间', '电解电压', '电解电流',
                            '产氢量', '产氢累计量', '碱液流量', '碱温', '系统压力  ', '氧槽温', '氢槽温', '氧侧液位', '氢侧液位',
                            '氧中氢', '氢中氧', '脱氧上温', '脱氧下温', 'B塔上温', 'B塔下温', 'C塔上温', 'C塔下温', 'A塔上温',
@@ -41,19 +41,22 @@ class dynamic_data():
         Current_density = to_np_and_expand(df['Current density'])/4000
         T_in = to_np_and_expand(df['Tlye'])/100
         Lye_flow = to_np_and_expand(df['LyeFlow'])/2
-        Amb_temp = to_np_and_expand(df['AmbT'])
-
-        inputs = np.concatenate((V_star, T_out_star, dV_static_star, Current_density, T_in, Lye_flow,Amb_temp), axis=1)
+        Amb_temp = to_np_and_expand(df['AmbT'])/100
+        dJ = to_np_and_expand(df['dj'])/100
+        # inputs = np.concatenate((V_star, T_out_star, dV_static_star, Current_density, T_in, Lye_flow,Amb_temp, dJ), axis=1)
+        inputs = np.concatenate((V_star, T_out_star,  Current_density, T_in, Lye_flow, Amb_temp, dJ), axis=1)
         V = to_np_and_expand(df['V'])
         T_out =to_np_and_expand(df['Tout'])
 
         return inputs,V,T_out
 
     def get_batch(self,num_step = 60):
-        """暂时这个还没法使用"""
+        """已经修改好了，可以正常使用"""
         X = []
         Y_V = []
         Y_T = []
+        self.batch_file_list = np.random.randint(low=0, high=len(self.file_list),
+                                                 size=self.file_num)  # 随机抽取5个文件，每个文件里抽取10个sequence，每次抽取批次都需要重新生成随即列表
         for i in range(len(self.batch_file_list)):
             file = self.batch_file_list[i]
             file = self.file_list[file]
@@ -125,5 +128,23 @@ class dynamic_data():
         dV_static_star = dV_static_star[num_step:]
         return v0,T0,dV_static_star,V,T_out
 
+    def get_model_fit_data(self,num_step = 60):
+        """这个函数可以一次性输出所有的数据，让模型开始自己进行split并且训练"""
+        X = []
+        Y_V = []
+        Y_T = []
+        for file in self.file_list:
+            file = os.path.join(self.source_folder, file)
+            df = pandas.read_csv(file)
+            inputs,V,T_out = self.get_input_cols(df)
+            for idx in range(0, len(df) - num_step):
+                X.append(inputs[idx:idx + num_step, :])
+                Y_V.append(V[idx + num_step - 1])
+                Y_T.append(T_out[idx + num_step - 1])
+        X = np.array(X)
+        Y_V = np.array(Y_V)
+        Y_T = np.array(Y_T)
+        Y = np.concatenate((Y_V,Y_T),axis = 1)
+        return X,Y
 
 

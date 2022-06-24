@@ -500,6 +500,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\Dynamic model data-20s\Data 0614\TJ-20211129.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\Dynamic model data-20s\Data 0614\TJ-20211202.csv">
           <value>
             <Attribute>
