@@ -173,7 +173,7 @@ class Artificial_data():
         T_out_star = [t0] * self.num_step  # 初始温度，关机状态下
         Current_density = [0] * self.num_step  # 初始电流密度，关机状态下
 
-    def get_model_fit_data(self,num_step = 60):
+    def get_model_fit_data(self,num_step = 32):
         """这个函数可以一次性输出所有的数据，让模型开始自己进行split并且训练"""
         X = []
         Y_V = []
