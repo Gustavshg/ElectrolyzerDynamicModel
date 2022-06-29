@@ -173,6 +173,24 @@ class Artificial_data():
         T_out_star = [t0] * self.num_step  # 初始温度，关机状态下
         Current_density = [0] * self.num_step  # 初始电流密度，关机状态下
 
+    def get_model_fit_data(self,num_step = 60):
+        """这个函数可以一次性输出所有的数据，让模型开始自己进行split并且训练"""
+        X = []
+        Y_V = []
+        Y_T = []
+        for file in self.file_list:
+            file = os.path.join(self.source_folder, file)
+            df = pandas.read_csv(file)
+            inputs,V,T_out = self.get_input_cols(df)
+            for idx in range(0, len(df) - num_step):
+                X.append(inputs[idx:idx + num_step, :])
+                Y_V.append(V[idx + num_step - 1])
+                Y_T.append(T_out[idx + num_step - 1])
+        X = np.array(X)
+        Y_V = np.array(Y_V)
+        Y_T = np.array(Y_T)
+        Y = np.concatenate((Y_V,Y_T),axis = 1)
+        return X,Y
 
 
         print(V_star.shape)
