@@ -385,6 +385,8 @@ class Only_LSTM():
         model = Model(input_data, output_data)
         return model
 
+
+
 # model = Attention_LSTM()
 # model = model.get_model()
 # print(model(x).shape)

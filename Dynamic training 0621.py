@@ -70,7 +70,7 @@ if train == 1:
             ax2.set_ylim([-0.6, 0.6])
             plt.title('Model training epoch %d, loss %f'%(epoch_id,loss_epoch))
         if save == 1:
-            stor_file = 'Neural Networks/Dynamic model/Verson0621/trial 4 lstm 1.9.ckpt'
+            stor_file = 'Neural Networks/Dynamic model/Version 0621/trial 4 lstm 1.9.ckpt'
             model.save(stor_file)
     plt.show()
 
@@ -79,7 +79,7 @@ if train == 1:
 read = 1
 
 if read == 1:
-    model = keras.models.load_model('Neural Networks/Dynamic model/Verson0621/trial 4 lstm 1.9.ckpt')
+    model = keras.models.load_model('Neural Networks/Dynamic model/Version 0621/trial 4 lstm 1.9.ckpt')
 recover = 1
 
 if recover ==1:

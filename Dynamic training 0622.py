@@ -70,7 +70,7 @@ if args.train == 1:
             ax2.set_ylim([-0.6, 0.6])
             plt.title('Model training epoch %d, loss %f'%(epoch_id,loss_epoch))
         if args.save == 1:
-            stor_file = 'Neural Networks/Dynamic model/Verson0621/trial 4 lstm 1.8.ckpt'
+            stor_file = 'Neural Networks/Dynamic model/Version 0621/trial 4 lstm 1.8.ckpt'
             model.save(stor_file)
     plt.show()
 
@@ -81,7 +81,7 @@ if args.recover ==1:
     import pydotplus
     from pydotplus import graphviz
     from tensorflow.keras.utils import plot_model
-    model = keras.models.load_model('Neural Networks/Dynamic model/Verson0621/trial 4 lstm 1.7.ckpt')
+    model = keras.models.load_model('Neural Networks/Dynamic model/Version 0621/trial 4 lstm 1.7.ckpt')
     plot_model(model,to_file = 'Cache/model1.png',show_shapes = True,show_layer_names = True,dpi = 300,show_layer_activations = True)
     dynamic_data = datafeed.dynamic_data()
 
